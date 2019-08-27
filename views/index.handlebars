@@ -1,29 +1,20 @@
+<div id="wrapper">
 <h1>Scraper App</h1>
 
 <p>Here are the current articles from realclearpolitics.com:</p>
 
-{{!-- <ul>
+<ul>
+  <div id="articles">
   {{#each articles}}
-  	<li>
-      <p data-id={{this.dbArticles._id}}>{{this.dbArticles.title}}<br>{{this.dbArticles.link}}</p>
-  	</li> --}}
-
-
-
-      {{!-- <h2>Add a Comment</h2>
-
-<form class="create-form">
-
-  <div class="form-group">
-    <label for="quo">Comment:</label>
-    <textarea id="quo" name="quote" rows="8" cols="40"></textarea>
+  <li data-id={{_id}}>
+    <p>Title: {{title}}</p>
+    <p>Publisher: {{publisher}}</p>
+    <p>Author: {{author}}</p>
+    <p>Link: {{link}}</p>
+  </li>
+  <br>
+  {{/each}}
   </div>
-
-  <button type="submit">Add Comment</button>
-</form> --}}
-
-
-
-  {{!-- {{/each}}
-</ul> --}}
-
+  <div id="comments"></div>
+</ul>
+</div>

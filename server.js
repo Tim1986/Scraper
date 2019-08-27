@@ -1,4 +1,5 @@
 var express = require("express");
+var exphbs = require("express-handlebars");
 var logger = require("morgan");
 var mongoose = require("mongoose");
 
@@ -13,8 +14,10 @@ app.use(logger("dev"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
+app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+app.set("view engine", "handlebars");
 
-mongoose.connect("mongodb://localhost/scraperhomework13", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost/scraperhomework27", { useNewUrlParser: true });
 
 app.get("/scrape", function (req, res) {
   axios.get("http://www.realclearpolitics.com/").then(function (response) {
@@ -22,11 +25,25 @@ app.get("/scrape", function (req, res) {
 
     $("div.post").each(function (i, element) {
       var result = {};
+      var authorPublisher = [];
 
       result.title = $(this).text().split("\n")[1].trim();
-      result.author = $(this).children(".byline").text().split(",")[0];
-      result.publisher = $(this).children(".byline").text().split(",")[1];
+      author = $(this).children(".byline").text().split(",")[0];
+      publisher = $(this).children(".byline").text().split(",")[1];
       result.link = $(this).children().children().attr("href");
+      // if (result.author || result.publisher) {
+      authorPublisher.push(author)
+      authorPublisher.push(publisher)
+      console.log(authorPublisher)
+
+        if (authorPublisher[1] === undefined) {
+          result.publisher = authorPublisher[0]
+          result.author = "N/A"
+        } else {
+          result.publisher = authorPublisher[1]
+          result.author = authorPublisher[0]
+        }
+      // }
 
       db.Article.create(result)
         .then(function (dbArticle) {
@@ -39,17 +56,6 @@ app.get("/scrape", function (req, res) {
     res.send("Scrape Complete");
   });
 });
-
-app.get("/", function(req, res, next) {
-  db.Article.find({})
-    .then(function(err, content){
-      res.render("index", { articles: content });
-    })
-    .catch(function (err) {
-      res.json(err);
-    });
-
-  });
 
 app.get("/articles", function (req, res) {
   db.Article.find({})
@@ -85,6 +91,34 @@ app.post("/articles/:id", function(req, res) {
     });
 });
 
+app.delete("/articles/:id", function(req, res) {
+  db.Comment.remove(req.body)
+  .then(function(dbComment) {
+    return db.Article.findOneAndRemove({ _id: req.params.id }, { comment: dbComment._id })
+  })
+  .then(function(dbArticle) {
+    res.json(dbArticle);
+  })
+  .catch(function(err) {
+    res.json(err);
+  })
+})
+
+app.get("/", function(req, res, next) {
+  db.Article.find({})
+    .then(function(data){
+      var hbsObject = {
+        articles: data
+      };
+      // console.log(hbsObject.articles[0].title);
+
+      res.render("index", hbsObject);
+    })
+    .catch(function (err) {
+      res.json(err);
+    });
+
+  });
 
 app.listen(PORT, function () {
   console.log("App running on port " + PORT + "!");
